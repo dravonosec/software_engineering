@@ -1,17 +1,16 @@
 import io
 from PIL import Image
 import numpy as np
-
+import streamlit as st
 from keras.applications import EfficientNetB0
 from keras.preprocessing import image
 from keras.applications.efficientnet import preprocess_input, decode_predictions
 
-
+st.title("Image Classification")
 img_path = 'car.jpg'
 
 def load_model():
     return EfficientNetB0(weights='imagenet')
-
 
 def preprocess_image(img):
     img = img.resize((224, 224))
@@ -20,27 +19,27 @@ def preprocess_image(img):
     x = preprocess_input(x)
     return x
 
-
 def load_image():
-    uploaded_file = image.load_img(img_path, target_size=(224, 224))
-    return uploaded_file
-
-
+    uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
+    if uploaded_file is not None:
+        img = Image.open(uploaded_file)
+        return img
 
 # Загружаем предварительно обученную модель
 model = load_model()
+
 # Выводим форму загрузки изображения и получаем изображение
 img = load_image()
-# Предварительная обработка изображения
-x = preprocess_image(img)
-# Распознавание изображения
-preds = model.predict(x)
 
-# Вывод предсказаний
-classes = decode_predictions(preds, top=3)[0]
-for cl in classes:
-    print(cl[1], cl[2])
+# Проверяем, что изображение загружено
+if img is not None:
+    # Предварительная обработка изображения
+    x = preprocess_image(img)
 
-# sports_car 0.6669253
-# convertible 0.13077284
-# racer 0.07213001
+    # Распознавание изображения
+    preds = model.predict(x)
+
+    # Вывод предсказаний
+    classes = decode_predictions(preds, top=3)[0]
+    for cl in classes:
+        st.write(cl[1], cl[2])
