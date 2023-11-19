@@ -33,6 +33,7 @@
 - Создано API для приложения
 
 Примечание: для запуска приложения используется команда uvicorn main:app --reload
+
 Результат работы:
 ![image](https://github.com/dravonosec/software_engineering/assets/49843248/e79f86eb-b1b2-4d08-b413-eb60243d9eaf)
 
