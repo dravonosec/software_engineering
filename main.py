@@ -1,13 +1,12 @@
-import io
+from fastapi import FastAPI, UploadFile
 from PIL import Image
+import io
 import numpy as np
-import streamlit as st
 from keras.applications import EfficientNetB0
 from keras.preprocessing import image
 from keras.applications.efficientnet import preprocess_input, decode_predictions
 
-st.title("Image Classification")
-img_path = 'car.jpg'
+app = FastAPI()
 
 def load_model():
     return EfficientNetB0(weights='imagenet')
@@ -19,20 +18,15 @@ def preprocess_image(img):
     x = preprocess_input(x)
     return x
 
-def load_image():
-    uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
-    if uploaded_file is not None:
-        img = Image.open(uploaded_file)
-        return img
+def load_image(file):
+    image = Image.open(io.BytesIO(file))
+    return image
 
-# Загружаем предварительно обученную модель
-model = load_model()
+@app.post("/predict/")
+async def predict(file: UploadFile):
+    model = load_model()
+    img = load_image(await file.read())
 
-# Выводим форму загрузки изображения и получаем изображение
-img = load_image()
-
-# Проверяем, что изображение загружено
-if img is not None:
     # Предварительная обработка изображения
     x = preprocess_image(img)
 
@@ -41,5 +35,11 @@ if img is not None:
 
     # Вывод предсказаний
     classes = decode_predictions(preds, top=3)[0]
-    for cl in classes:
-        st.write(cl[1], cl[2])
+
+    return {
+        "predictions": [{"class": cl[1], "confidence": float(cl[2])} for cl in classes]
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
